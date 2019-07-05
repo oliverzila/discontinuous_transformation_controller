@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/carlos/catkin_ws/devel/include",
+                "/opt/ros/melodic/include",
+                "/home/carlos/catkin_ws/src/arc_odometry/include",
+                "/home/carlos/catkin_ws/src/computed_torque_controller/include",
+                "/home/carlos/catkin_ws/src/le_simulator/include",
+                "/home/carlos/catkin_ws/src/discontinuous_transformation_controller/include",
+                "/home/carlos/catkin_ws/src/linearizing_controllers/include",
+                "/home/carlos/catkin_ws/src/pid_plus_gravity_controller/include",
+                "/home/carlos/catkin_ws/src/pose_ref/include",
+                "/home/carlos/catkin_ws/src/rma_controller/include",
+                "/home/carlos/catkin_ws/src/twil/twil_gazebo_ros_control/include",
+                "/usr/include",
+                "/usr/include/eigen3",
+                "${workspaceFolder}/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
