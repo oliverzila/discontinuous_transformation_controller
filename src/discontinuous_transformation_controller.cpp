@@ -117,7 +117,6 @@ int main(int argc,char* argv[])
 
         //non-linear controller
         ur[0]=-gamma[0]*e*std::cos(alpha);
-
         //check if alpha is too small (sin(x)/x ->1 when x->0)
         if(fabs(alpha)>DBL_EPSILON)
             ur[1]=-gamma[1]*alpha
