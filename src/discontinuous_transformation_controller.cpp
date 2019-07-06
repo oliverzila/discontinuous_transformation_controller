@@ -114,22 +114,26 @@ int main(int argc,char* argv[])
         e=sqrt(pow(xhat[0],2)+pow(xhat[1],2));
         psi=atan2(xhat[1],xhat[0]);
         alpha=xhat[2]-psi;
+        std::cout<<"e: "<<e<<", psi: "<<psi<<", alpha: "<<alpha<<std::endl;
+        std::cout<<"hxat: \n"<<xhat<<std::endl;
 
         //non-linear controller
         ur[0]=-gamma[0]*e*std::cos(alpha);
         //check if alpha is too small (sin(x)/x ->1 when x->0)
         if(fabs(alpha)>DBL_EPSILON)
-            ur[1]=-gamma[1]*alpha
+            ur[1]=-gamma[1]*atan2(std::sin(alpha),std::cos(alpha))
             -gamma[0]*std::sin(alpha)*std::cos(alpha)
             +gamma[0]*(lambda[2]/lambda[1])*std::cos(alpha)*std::sin(alpha)*(psi/alpha);
         else
-            ur[1]=+gamma[0]*(lambda[2]/lambda[1])*std::cos(alpha)*psi;
+            ur[1]=+gamma[0]*(lambda[2]/lambda[1])*psi;
 
         //PI controller
         ros::Time time = ros::Time::now();
         accel.linear.x=pid[0].computeCommand(ur[0]-u[0],time-last_time);
         accel.angular.z=pid[1].computeCommand(ur[1]-u[1],time-last_time);
         last_time=time;
+        std::cout<<"Erro V: "<<ur[0]-u[0]<<std::endl;
+        std::cout<<"Erro omega: "<<ur[1]-u[1]<<std::endl;
         //publish acceleration reference for dynamics linearizing controller
         pub_command.publish(accel);
         
