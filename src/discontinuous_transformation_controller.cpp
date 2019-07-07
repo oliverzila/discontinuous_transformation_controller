@@ -126,8 +126,8 @@ int main(int argc,char* argv[])
         //non-linear controller
         ur[0]=-gamma[0]*e*std::cos(alpha);
         //check if alpha is too small (sin(x)/x ->1 when x->0)
-        if(fabs(atan2(std::sin(alpha),std::cos(alpha)))>DBL_EPSILON)
-            ur[1]=-gamma[1]*atan2(std::sin(alpha),std::cos(alpha))
+        if(fabs(alpha)>DBL_EPSILON)
+            ur[1]=-gamma[1]*alpha
             -gamma[0]*std::sin(alpha)*std::cos(alpha)
             +gamma[0]*(lambda[2]/lambda[1])*std::cos(alpha)*std::sin(alpha)*(psi/alpha);
         else
