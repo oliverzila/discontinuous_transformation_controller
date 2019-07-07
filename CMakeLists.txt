@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   linearizing_controllers_msgs
   nav_msgs
+  gazebo_msgs
   roscpp
   tf
 )
@@ -110,7 +111,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES discontinuous_transformation_controller
-  CATKIN_DEPENDS cmake_modules control_toolbox geometry_msgs linearizing_controllers_msgs nav_msgs roscpp tf
+  CATKIN_DEPENDS cmake_modules control_toolbox geometry_msgs linearizing_controllers_msgs nav_msgs gazebo_msgs roscpp tf
   DEPENDS Eigen
 )
 

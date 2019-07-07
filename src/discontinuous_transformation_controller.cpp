@@ -3,6 +3,7 @@
 #include <geometry_msgs/Accel.h>
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
+#include <gazebo_msgs/ModelStates.h>
 #include <linearizing_controllers_msgs/DynamicsLinearizingControllerStatus.h>
 
 #include <eigen3/Eigen/Dense>
@@ -14,6 +15,19 @@
 Eigen::Vector2d u; //linear and angular velocity
 Eigen::Vector3d x; //pose - x,y,theta
 Eigen::Vector3d xr; //pose reference
+
+Eigen::Vector3d x_real;
+Eigen::Vector2d u_real;
+
+void realPoseCB(const gazebo_msgs::ModelStates::ConstPtr &pose_real)
+{       //change names to use on plot later
+        x_real[0]=pose_real->pose[1].position.x;
+        x_real[1]=pose_real->pose[1].position.y;
+        x_real[2]=tf::getYaw(pose_real->pose[1].orientation);
+        u_real[0]=sqrt(pow(pose_real->twist[1].linear.x,2)+pow(pose_real->twist[1].linear.y,2));
+        u_real[1]=pose_real->twist[1].angular.z;
+}
+
 
 void statusCB(const linearizing_controllers_msgs::DynamicsLinearizingControllerStatus::ConstPtr &status_)
 {
@@ -72,31 +86,38 @@ int main(int argc,char* argv[])
     }
     Eigen::Vector2d Ki=Eigen::Map<Eigen::Vector2d>(KiVec.data()).transpose();
 
+    ros::Subscriber sub_realPose=node.subscribe("/gazebo//model_states",1,&realPoseCB);
     ros::Subscriber sub_status=node.subscribe("/dynamics_linearizing_controller/status",1000,&statusCB);
     ros::Subscriber sub_odom=node.subscribe("/dynamics_linearizing_controller/odom",1000,&poseCB);
     ros::Subscriber sub_ref=node.subscribe("reference",1,&referenceCB);
     ros::Publisher pub_command=node.advertise<geometry_msgs::Accel>("/dynamics_linearizing_controller/command",1);
 
     geometry_msgs::Accel accel;
+    accel.linear.x=0.0;
+    accel.angular.z=0.0;
 
     Eigen::MatrixXd R;
     Eigen::Vector3d xhat;
     Eigen::Vector2d ur;
     Eigen::Vector2d error;
     Eigen::Vector2d last_error;
-    last_error[0]=0;
-    last_error[1]=0;
+    last_error[0]=0.0;
+    last_error[1]=0.0;
     double e;
     double alpha;
     double psi;
-    double last_v1=0;
-    double last_v2=0;
+    double last_v1=0.0;
+    double last_v2=0.0;
 
     //set initial pose and pose reference to zero
     for(int i=0;i<3;i++)
     {
-        x[i]=0;
-        xr[i]=0;
+        x[i]=0.0;
+        xr[i]=0.0;
+    }
+    for(int i=0;i<2;i++)
+    {
+        u[i]=0.0;
     }
 
     std::vector<control_toolbox::Pid> pid(2);
@@ -134,7 +155,6 @@ int main(int argc,char* argv[])
             ur[1]=+gamma[0]*(lambda[2]/lambda[1])*psi;
 
         //PI controller
-
         ros::Time time = ros::Time::now();
         error=ur-u;
         std::cout<<"u error: \n"<<error<<std::endl;
