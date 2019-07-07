@@ -82,9 +82,15 @@ int main(int argc,char* argv[])
     Eigen::MatrixXd R;
     Eigen::Vector3d xhat;
     Eigen::Vector2d ur;
+    Eigen::Vector2d error;
+    Eigen::Vector2d last_error;
+    last_error[0]=0;
+    last_error[1]=0;
     double e;
     double alpha;
     double psi;
+    double last_v1=0;
+    double last_v2=0;
 
     //set initial pose and pose reference to zero
     for(int i=0;i<3;i++)
@@ -120,7 +126,7 @@ int main(int argc,char* argv[])
         //non-linear controller
         ur[0]=-gamma[0]*e*std::cos(alpha);
         //check if alpha is too small (sin(x)/x ->1 when x->0)
-        if(fabs(alpha)>DBL_EPSILON)
+        if(fabs(atan2(std::sin(alpha),std::cos(alpha)))>DBL_EPSILON)
             ur[1]=-gamma[1]*atan2(std::sin(alpha),std::cos(alpha))
             -gamma[0]*std::sin(alpha)*std::cos(alpha)
             +gamma[0]*(lambda[2]/lambda[1])*std::cos(alpha)*std::sin(alpha)*(psi/alpha);
@@ -128,16 +134,23 @@ int main(int argc,char* argv[])
             ur[1]=+gamma[0]*(lambda[2]/lambda[1])*psi;
 
         //PI controller
+
         ros::Time time = ros::Time::now();
-        accel.linear.x=pid[0].computeCommand(ur[0]-u[0],time-last_time);
-        accel.angular.z=pid[1].computeCommand(ur[1]-u[1],time-last_time);
+        error=ur-u;
+        std::cout<<"u error: \n"<<error<<std::endl;
+        accel.linear.x=last_v1+184.0*error[0]-99.36*last_error[0];//pid[0].computeCommand(ur[0]-u[0],time-last_time);//
+        accel.angular.z=last_v2+184.0*error[1]-99.36*last_error[1];//pid[1].computeCommand(ur[1]-u[1],time-last_time);//
         last_time=time;
+        last_error[0]=error[0];
+        last_error[1]=error[1];
+        last_v1=accel.linear.x;
+        last_v2=accel.angular.z;
         std::cout<<"Erro V: "<<ur[0]-u[0]<<std::endl;
         std::cout<<"Erro omega: "<<ur[1]-u[1]<<std::endl;
+
         //publish acceleration reference for dynamics linearizing controller
         pub_command.publish(accel);
         
-
         ros::spinOnce();
         if(!loop.sleep()) ROS_WARN("Missed deadline!");
     }
