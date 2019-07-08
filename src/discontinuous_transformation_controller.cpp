@@ -158,8 +158,8 @@ int main(int argc,char* argv[])
         ros::Time time = ros::Time::now();
         error=ur-u;
         std::cout<<"u error: \n"<<error<<std::endl;
-        accel.linear.x=last_v1+184.0*error[0]-99.36*last_error[0];//pid[0].computeCommand(ur[0]-u[0],time-last_time);//
-        accel.angular.z=last_v2+184.0*error[1]-99.36*last_error[1];//pid[1].computeCommand(ur[1]-u[1],time-last_time);//
+        accel.linear.x=last_v1+(Kp[0]+Ki[0]/200.0)*error[0]+(Ki[0]/200-Kp[0])*last_error[0];//pid[0].computeCommand(ur[0]-u[0],time-last_time);//
+        accel.angular.z=last_v2+(Kp[1]+Ki[1]/200.0)*error[1]+(Ki[1]/200-Kp[1])*last_error[1];//pid[1].computeCommand(ur[1]-u[1],time-last_time);//
         last_time=time;
         last_error[0]=error[0];
         last_error[1]=error[1];
