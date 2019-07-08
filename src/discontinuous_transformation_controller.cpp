@@ -87,8 +87,8 @@ int main(int argc,char* argv[])
     Eigen::Vector2d Ki=Eigen::Map<Eigen::Vector2d>(KiVec.data()).transpose();
 
     ros::Subscriber sub_realPose=node.subscribe("/gazebo//model_states",1,&realPoseCB);
-    ros::Subscriber sub_status=node.subscribe("/dynamics_linearizing_controller/status",1000,&statusCB);
-    ros::Subscriber sub_odom=node.subscribe("/dynamics_linearizing_controller/odom",1000,&poseCB);
+    ros::Subscriber sub_status=node.subscribe("/dynamics_linearizing_controller/status",1,&statusCB);
+    ros::Subscriber sub_odom=node.subscribe("/dynamics_linearizing_controller/odom",100,&poseCB);
     ros::Subscriber sub_ref=node.subscribe("reference",1,&referenceCB);
     ros::Publisher pub_command=node.advertise<geometry_msgs::Accel>("/dynamics_linearizing_controller/command",1);
 
@@ -141,36 +141,36 @@ int main(int argc,char* argv[])
         e=sqrt(pow(xhat[0],2)+pow(xhat[1],2));
         psi=atan2(xhat[1],xhat[0]);
         alpha=xhat[2]-psi;
-        std::cout<<"e: "<<e<<", psi: "<<psi<<", alpha: "<<alpha<<std::endl;
-        std::cout<<"hxat: \n"<<xhat<<std::endl;
+        std::cout<<"e: "<<e<<"  psi: "<<psi<<"  alpha: "<<alpha<<std::endl;
+        std::cout<<"xhat: \n"<<xhat<<std::endl;
 
         //non-linear controller
         ur[0]=-gamma[0]*e*std::cos(alpha);
         //check if alpha is too small (sin(x)/x ->1 when x->0)
-        if(fabs(alpha)>DBL_EPSILON)
-            ur[1]=-gamma[1]*alpha
+        if(fabs(atan2(std::sin(alpha),std::cos(alpha)))>DBL_EPSILON)
+            ur[1]=-gamma[1]*atan2(std::sin(alpha),std::cos(alpha))
             -gamma[0]*std::sin(alpha)*std::cos(alpha)
             +gamma[0]*(lambda[2]/lambda[1])*std::cos(alpha)*std::sin(alpha)*(psi/alpha);
         else
             ur[1]=+gamma[0]*(lambda[2]/lambda[1])*psi;
 
+        std::cout<<"ur: \n"<<ur<<std::endl;
+        std::cout<<"u: \n"<<u<<std::endl;
         //PI controller
         ros::Time time = ros::Time::now();
         error=ur-u;
         std::cout<<"u error: \n"<<error<<std::endl;
-        accel.linear.x=last_v1+(Kp[0]+Ki[0]/200.0)*error[0]+(Ki[0]/200-Kp[0])*last_error[0];//pid[0].computeCommand(ur[0]-u[0],time-last_time);//
-        accel.angular.z=last_v2+(Kp[1]+Ki[1]/200.0)*error[1]+(Ki[1]/200-Kp[1])*last_error[1];//pid[1].computeCommand(ur[1]-u[1],time-last_time);//
+        accel.linear.x=last_v1+(Kp[0]+Ki[0]/200.0)*error[0]+(Ki[0]/200-Kp[0])*last_error[0];//pid[0].computeCommand(error[0],time-last_time);//
+        accel.angular.z=last_v2+(Kp[1]+Ki[1]/200.0)*error[1]+(Ki[1]/200-Kp[1])*last_error[1];//pid[1].computeCommand(error[1],time-last_time);//
         last_time=time;
         last_error[0]=error[0];
         last_error[1]=error[1];
         last_v1=accel.linear.x;
         last_v2=accel.angular.z;
-        std::cout<<"Erro V: "<<ur[0]-u[0]<<std::endl;
-        std::cout<<"Erro omega: "<<ur[1]-u[1]<<std::endl;
-
+        std::cout<<"v1: "<<accel.linear.x<<" v2: "<<accel.angular.z<<std::endl;
         //publish acceleration reference for dynamics linearizing controller
         pub_command.publish(accel);
-        
+        std::cout<<"------"<<std::endl;
         ros::spinOnce();
         if(!loop.sleep()) ROS_WARN("Missed deadline!");
     }
