@@ -1,3 +1,25 @@
+/******************************************************************************
+	            	ROS Discontinuous Transformation Controller Package
+		        			Discontinuous Transformation Controller
+          Copyright (C) 2019 Carlos Eduardo Pedroso de Oliveira and
+		  					Ernesto Dickel Saraiva
+
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful, but
+        WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+        General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with this program.  If not, see
+        <http://www.gnu.org/licenses/>.
+        
+*******************************************************************************/
+
 #include <ros/ros.h>
 
 #include <geometry_msgs/Accel.h>
@@ -101,8 +123,7 @@ int main(int argc,char* argv[])
     Eigen::Vector2d ur;
     Eigen::Vector2d error;
     Eigen::Vector2d last_error;
-    last_error[0]=0.0;
-    last_error[1]=0.0;
+    last_error.setZero();
     double e;
     double alpha;
     double psi;
@@ -110,15 +131,8 @@ int main(int argc,char* argv[])
     double last_v2=0.0;
 
     //set initial pose and pose reference to zero
-    for(int i=0;i<3;i++)
-    {
-        x[i]=0.0;
-        xr[i]=0.0;
-    }
-    for(int i=0;i<2;i++)
-    {
-        u[i]=0.0;
-    }
+    x.setZero();
+    u.setZero();
 
     std::vector<control_toolbox::Pid> pid(2);
     for(int i=0;i<2;i++)
@@ -148,7 +162,7 @@ int main(int argc,char* argv[])
         ur[0]=-gamma[0]*e*std::cos(alpha);
         //check if alpha is too small (sin(x)/x ->1 when x->0)
         if(fabs(atan2(std::sin(alpha),std::cos(alpha)))>DBL_EPSILON)
-            ur[1]=-gamma[1]*atan2(std::sin(alpha),std::cos(alpha))
+            ur[1]=-gamma[1]*alpha
             -gamma[0]*std::sin(alpha)*std::cos(alpha)
             +gamma[0]*(lambda[2]/lambda[1])*std::cos(alpha)*std::sin(alpha)*(psi/alpha);
         else
@@ -175,5 +189,10 @@ int main(int argc,char* argv[])
         if(!loop.sleep()) ROS_WARN("Missed deadline!");
     }
     
+    sub_odom.shutdown();
+    sub_ref.shutdown();
+    sub_status.shutdown();
+    sub_realPose.shutdown();
+    pub_command.shutdown();
     return 0;
 }
