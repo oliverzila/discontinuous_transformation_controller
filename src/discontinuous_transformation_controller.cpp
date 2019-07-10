@@ -113,7 +113,9 @@ int main(int argc,char* argv[])
     ros::Subscriber sub_odom=node.subscribe("/dynamics_linearizing_controller/odom",100,&poseCB);
     ros::Subscriber sub_ref=node.subscribe("reference",1,&referenceCB);
     ros::Publisher pub_command=node.advertise<geometry_msgs::Accel>("/dynamics_linearizing_controller/command",1);
+    ros::Publisher pub_pose=node.advertise<geometry_msgs::Pose2D>("pose",1);
 
+    geometry_msgs::Pose2D pose;
     geometry_msgs::Accel accel;
     accel.linear.x=0.0;
     accel.angular.z=0.0;
@@ -161,7 +163,7 @@ int main(int argc,char* argv[])
         //non-linear controller
         ur[0]=-gamma[0]*e*std::cos(alpha);
         //check if alpha is too small (sin(x)/x ->1 when x->0)
-        if(fabs(atan2(std::sin(alpha),std::cos(alpha)))>DBL_EPSILON)
+        if(fabs(alpha)>DBL_EPSILON)
             ur[1]=-gamma[1]*alpha
             -gamma[0]*std::sin(alpha)*std::cos(alpha)
             +gamma[0]*(lambda[2]/lambda[1])*std::cos(alpha)*std::sin(alpha)*(psi/alpha);
@@ -174,8 +176,8 @@ int main(int argc,char* argv[])
         ros::Time time = ros::Time::now();
         error=ur-u;
         std::cout<<"u error: \n"<<error<<std::endl;
-        accel.linear.x=last_v1+(Kp[0]+Ki[0]/200.0)*error[0]+(Ki[0]/200-Kp[0])*last_error[0];//pid[0].computeCommand(error[0],time-last_time);//
-        accel.angular.z=last_v2+(Kp[1]+Ki[1]/200.0)*error[1]+(Ki[1]/200-Kp[1])*last_error[1];//pid[1].computeCommand(error[1],time-last_time);//
+        accel.linear.x=pid[0].computeCommand(error[0],time-last_time);//last_v1+(Kp[0]+Ki[0]/200.0)*error[0]+(Ki[0]/200-Kp[0])*last_error[0];//
+        accel.angular.z=pid[1].computeCommand(error[1],time-last_time);//last_v2+(Kp[1]+Ki[1]/200.0)*error[1]+(Ki[1]/200-Kp[1])*last_error[1];//
         last_time=time;
         last_error[0]=error[0];
         last_error[1]=error[1];
@@ -184,6 +186,10 @@ int main(int argc,char* argv[])
         std::cout<<"v1: "<<accel.linear.x<<" v2: "<<accel.angular.z<<std::endl;
         //publish acceleration reference for dynamics linearizing controller
         pub_command.publish(accel);
+        pose.x=x[0];
+        pose.y=x[1];
+        pose.theta=x[2];
+        pub_pose.publish(pose);
         std::cout<<"------"<<std::endl;
         ros::spinOnce();
         if(!loop.sleep()) ROS_WARN("Missed deadline!");
