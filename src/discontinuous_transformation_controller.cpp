@@ -114,13 +114,9 @@ int main(int argc,char* argv[])
     Eigen::Vector3d xhat;
     Eigen::Vector2d ur;
     Eigen::Vector2d error;
-    Eigen::Vector2d last_error;
-    last_error.setZero();
     double e;
     double alpha;
     double psi;
-    double last_v1=0.0;
-    double last_v2=0.0;
 
     //set initial pose and pose reference to zero
     x.setZero();
@@ -161,13 +157,9 @@ int main(int argc,char* argv[])
         //PI controller
         ros::Time time = ros::Time::now();
         error=ur-u;
-        accel.linear.x=pid[0].computeCommand(error[0],time-last_time);//last_v1+(Kp[0]+Ki[0]/200.0)*error[0]+(Ki[0]/200-Kp[0])*last_error[0];//
-        accel.angular.z=pid[1].computeCommand(error[1],time-last_time);//last_v2+(Kp[1]+Ki[1]/200.0)*error[1]+(Ki[1]/200-Kp[1])*last_error[1];//
+        accel.linear.x=pid[0].computeCommand(error[0],time-last_time);
+        accel.angular.z=pid[1].computeCommand(error[1],time-last_time);
         last_time=time;
-        last_error[0]=error[0];
-        last_error[1]=error[1];
-        last_v1=accel.linear.x;
-        last_v2=accel.angular.z;
         //publish acceleration reference for dynamics linearizing controller
         pub_command.publish(accel);
         //publish status of controller
