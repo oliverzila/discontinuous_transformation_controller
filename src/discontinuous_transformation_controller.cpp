@@ -26,7 +26,6 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <discontinuous_transformation_controller_msgs/DiscontinuousTransformationControllerStatus.h>
 #include <nav_msgs/Odometry.h>
-#include <gazebo_msgs/ModelStates.h>
 #include <linearizing_controllers_msgs/DynamicsLinearizingControllerStatus.h>
 
 #include <eigen3/Eigen/Dense>
@@ -39,19 +38,7 @@ Eigen::Vector2d u; //linear and angular velocity
 Eigen::Vector3d x; //pose - x,y,theta
 Eigen::Vector3d xr; //pose reference
 
-Eigen::Vector3d x_real;
-Eigen::Vector2d u_real;
 Eigen::Vector2d torque;
-
-void realPoseCB(const gazebo_msgs::ModelStates::ConstPtr &pose_real)
-{       //change names to use on plot later
-        x_real[0]=pose_real->pose[1].position.x;
-        x_real[1]=pose_real->pose[1].position.y;
-        x_real[2]=tf::getYaw(pose_real->pose[1].orientation);
-        u_real[0]=sqrt(pow(pose_real->twist[1].linear.x,2)+pow(pose_real->twist[1].linear.y,2));
-        u_real[1]=pose_real->twist[1].angular.z;
-}
-
 
 void statusCB(const linearizing_controllers_msgs::DynamicsLinearizingControllerStatus::ConstPtr &status_)
 {
@@ -112,7 +99,6 @@ int main(int argc,char* argv[])
     }
     Eigen::Vector2d Ki=Eigen::Map<Eigen::Vector2d>(KiVec.data()).transpose();
 
-    ros::Subscriber sub_realPose=node.subscribe("/gazebo//model_states",1,&realPoseCB);
     ros::Subscriber sub_status=node.subscribe("/dynamics_linearizing_controller/status",1,&statusCB);
     ros::Subscriber sub_odom=node.subscribe("/dynamics_linearizing_controller/odom",100,&poseCB);
     ros::Subscriber sub_ref=node.subscribe("reference",1,&referenceCB);
@@ -156,13 +142,11 @@ int main(int argc,char* argv[])
                     -std::sin(xr[2]), std::cos(xr[2]), 0,
                     0, 0, 1).finished();
         xhat=R*(x-xr);
-        std::cout<<"theta: "<<x[2]<<std::endl;
+        
         //coordinate system transformation
         e=sqrt(pow(xhat[0],2)+pow(xhat[1],2));
         psi=atan2(xhat[1],xhat[0]);
         alpha=xhat[2]-psi;
-        std::cout<<"e: "<<e<<"  psi: "<<psi<<"  alpha: "<<alpha<<std::endl;
-        std::cout<<"xhat: \n"<<xhat<<std::endl;
 
         //non-linear controller
         ur[0]=-gamma[0]*e*std::cos(alpha);
@@ -174,12 +158,9 @@ int main(int argc,char* argv[])
         else
             ur[1]=+gamma[0]*(lambda[2]/lambda[1])*psi;
 
-        std::cout<<"ur: \n"<<ur<<std::endl;
-        std::cout<<"u: \n"<<u<<std::endl;
         //PI controller
         ros::Time time = ros::Time::now();
         error=ur-u;
-        std::cout<<"u error: \n"<<error<<std::endl;
         accel.linear.x=pid[0].computeCommand(error[0],time-last_time);//last_v1+(Kp[0]+Ki[0]/200.0)*error[0]+(Ki[0]/200-Kp[0])*last_error[0];//
         accel.angular.z=pid[1].computeCommand(error[1],time-last_time);//last_v2+(Kp[1]+Ki[1]/200.0)*error[1]+(Ki[1]/200-Kp[1])*last_error[1];//
         last_time=time;
@@ -187,7 +168,6 @@ int main(int argc,char* argv[])
         last_error[1]=error[1];
         last_v1=accel.linear.x;
         last_v2=accel.angular.z;
-        std::cout<<"v1: "<<accel.linear.x<<" v2: "<<accel.angular.z<<std::endl;
         //publish acceleration reference for dynamics linearizing controller
         pub_command.publish(accel);
         //publish status of controller
@@ -201,11 +181,16 @@ int main(int argc,char* argv[])
         status_.ur[0]=ur[0];
         status_.ur[1]=ur[1];
         status_.v[0]=accel.linear.x;
-        status_.v[0]=accel.angular.z;
+        status_.v[1]=accel.angular.z;
         status_.torque[0]=torque[0];
         status_.torque[1]=torque[1];
         pub_cstatus.publish(status_);
+
+
+        std::cout<<"e: "<<e<<"  psi: "<<psi<<"  alpha: "<<alpha<<std::endl;
+        std::cout<<"theta: "<<x[2]<<std::endl;
         std::cout<<"------"<<std::endl;
+
         ros::spinOnce();
         if(!loop.sleep()) ROS_WARN("Missed deadline!");
     }
@@ -213,7 +198,6 @@ int main(int argc,char* argv[])
     sub_odom.shutdown();
     sub_ref.shutdown();
     sub_status.shutdown();
-    sub_realPose.shutdown();
     pub_command.shutdown();
     pub_cstatus.shutdown();
 

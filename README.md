@@ -7,11 +7,13 @@ Developed and tested for the twil robot a class (2,0) mobile robot (Differential
 ### Packages required
 - **linearizing_controllers** available [here](http://git.ece.ufrgs.br/linearizing_controllers.git)
 - **linearizing_controllers_msgs** available [here](http://git.ece.ufrgs.br/linearizing_controllers_msgs.git)
+- **discontinuous_transformation_controller_msgs**
 
-### Instructions and suggestions for usage
+### Instructions for usage
 
 
-### Details on the controller
+- Add .yaml configuration files to bringup /config folder in twil_bringup
+- Add .launch to /launch folder in twil_bringup
 
 
 

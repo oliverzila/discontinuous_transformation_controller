@@ -1,0 +1,5 @@
+<launch>
+  <rosparam file="$(find twil_bringup)/config/discontinuous_transformation_controller.yaml" command="load"/>
+	<node name="non_linear_controller" pkg="discontinuous_transformation_controller" type="discontinuous_transformation_controller" respawn="false" output="screen" />
+	<include file="$(find twil_bringup)/launch/dynamics_linearizing_controller.launch" />
+</launch>

@@ -1,0 +1,19 @@
+# Watch-out: The indentation here is relevant to the semantic!
+
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+dynamics_linearizing_controller:
+  type: effort_controllers/DynamicsLinearizingController
+  joints:
+    - left_wheel_joint
+    - right_wheel_joint
+  F: [0.0, 0.08444758509282763, 3.770688129256381, 0.0]
+  G: [2.6468901285322475, 2.6468901285322475, -16.084061415321404, 16.084061415321404]
+  wheel_separation: 0.322
+  wheel_radius: [0.075, 0.075]
+  odom_frame_id: "odom"
+  base_frame_id: "twil_origin"
+  priority: 99
+  time_step: 0.01

@@ -1,0 +1,6 @@
+Instruções:
+mova
+o arquivo de launch em /launch para o folder de launch do pacote twil_bringup
+os arquivos yaml em /config para o folder config do pacote twil_bringup
+
+roslaunch twil_bringup gazebo.launch controller:=discontinuous_transformation_controller

@@ -1,0 +1,8 @@
+# Watch-out: The indentation here is relevant to the semantic!
+
+ lambda: [1.0, 1.0, 10.0]
+ gamma: [0.38, 1.25]
+ Kp: [92.0, 92.0]
+ Ki: [2116.0, 2116.0]
+
+
