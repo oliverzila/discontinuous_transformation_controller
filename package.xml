@@ -8,7 +8,7 @@
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="carlos@todo.todo">carlos</maintainer>
-  <maintainer email="carlos@todo.todo">ernesto</maintainer>
+  <maintainer email="ernesto@todo.todo">ernesto</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -28,7 +28,7 @@
   <!-- Example: -->
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
   <author  email="carlos@todo.todo">carlos</author>
-  <author  email="carlos@todo.todo">ernesto</author>
+  <author  email="ernesto@todo.todo">ernesto</author>
 
 
   <!-- The *depend tags are used to specify dependencies -->
@@ -56,6 +56,7 @@
   <build_depend>cmake_modules</build_depend>
   <build_depend>control_toolbox</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>discontinuous_transformation_controller_msgs</build_depend>
   <build_depend>linearizing_controllers_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>gazebo_msgs</build_depend>
@@ -65,6 +66,7 @@
   <build_export_depend>cmake_modules</build_export_depend>
   <build_export_depend>control_toolbox</build_export_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
+  <build_export_depend>discontinuous_transformation_controller_msgs</build_export_depend>
   <build_export_depend>linearizing_controllers_msgs</build_export_depend>
   <build_export_depend>nav_msgs</build_export_depend>
   <build_export_depend>gazebo_msgs</build_export_depend>
@@ -74,6 +76,7 @@
   <exec_depend>cmake_modules</exec_depend>
   <exec_depend>control_toolbox</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>discontinuous_transformation_controller_msgs</exec_depend>
   <exec_depend>linearizing_controllers_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>gazebo_msgs</exec_depend>

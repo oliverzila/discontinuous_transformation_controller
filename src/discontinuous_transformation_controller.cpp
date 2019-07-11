@@ -23,7 +23,8 @@
 #include <ros/ros.h>
 
 #include <geometry_msgs/Accel.h>
-#include <geometry_msgs/Pose2D.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <discontinuous_transformation_controller_msgs/DiscontinuousTransformationControllerStatus.h>
 #include <nav_msgs/Odometry.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <linearizing_controllers_msgs/DynamicsLinearizingControllerStatus.h>
@@ -40,6 +41,7 @@ Eigen::Vector3d xr; //pose reference
 
 Eigen::Vector3d x_real;
 Eigen::Vector2d u_real;
+Eigen::Vector2d torque;
 
 void realPoseCB(const gazebo_msgs::ModelStates::ConstPtr &pose_real)
 {       //change names to use on plot later
@@ -55,6 +57,8 @@ void statusCB(const linearizing_controllers_msgs::DynamicsLinearizingControllerS
 {
     u[0]=status_->process_value.linear.x;
     u[1]=status_->process_value.angular.z;
+    torque[0]=status_->command[0];
+    torque[1]=status_->command[1];
 }
 
 void poseCB(const nav_msgs::Odometry::ConstPtr &pose_)
@@ -113,10 +117,10 @@ int main(int argc,char* argv[])
     ros::Subscriber sub_odom=node.subscribe("/dynamics_linearizing_controller/odom",100,&poseCB);
     ros::Subscriber sub_ref=node.subscribe("reference",1,&referenceCB);
     ros::Publisher pub_command=node.advertise<geometry_msgs::Accel>("/dynamics_linearizing_controller/command",1);
-    ros::Publisher pub_pose=node.advertise<geometry_msgs::Pose2D>("pose",1);
+    ros::Publisher pub_cstatus=node.advertise<discontinuous_transformation_controller_msgs::DiscontinuousTransformationControllerStatus>("/dcc_status",1);
 
-    geometry_msgs::Pose2D pose;
     geometry_msgs::Accel accel;
+    discontinuous_transformation_controller_msgs::DiscontinuousTransformationControllerStatus status_;
     accel.linear.x=0.0;
     accel.angular.z=0.0;
 
@@ -186,10 +190,21 @@ int main(int argc,char* argv[])
         std::cout<<"v1: "<<accel.linear.x<<" v2: "<<accel.angular.z<<std::endl;
         //publish acceleration reference for dynamics linearizing controller
         pub_command.publish(accel);
-        pose.x=x[0];
-        pose.y=x[1];
-        pose.theta=x[2];
-        pub_pose.publish(pose);
+        //publish status of controller
+        status_.header.stamp=ros::Time::now();
+        status_.poseReference.x=xr[0];
+        status_.poseReference.y=xr[1];
+        status_.poseReference.theta=xr[2];
+        status_.pose.x=x[0];
+        status_.pose.y=x[1];
+        status_.pose.theta=x[2];
+        status_.ur[0]=ur[0];
+        status_.ur[1]=ur[1];
+        status_.v[0]=accel.linear.x;
+        status_.v[0]=accel.angular.z;
+        status_.torque[0]=torque[0];
+        status_.torque[1]=torque[1];
+        pub_cstatus.publish(status_);
         std::cout<<"------"<<std::endl;
         ros::spinOnce();
         if(!loop.sleep()) ROS_WARN("Missed deadline!");
@@ -200,5 +215,7 @@ int main(int argc,char* argv[])
     sub_status.shutdown();
     sub_realPose.shutdown();
     pub_command.shutdown();
+    pub_cstatus.shutdown();
+
     return 0;
 }
